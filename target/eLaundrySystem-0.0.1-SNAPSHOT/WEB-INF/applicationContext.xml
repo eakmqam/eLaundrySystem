@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" 
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="
+      http://www.springframework.org/schema/beans 
+      http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+	  http://www.springframework.org/schema/aop 
+	  http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+      http://www.springframework.org/schema/context 
+      http://www.springframework.org/schema/context/spring-context-4.0.xsd
+      http://www.springframework.org/schema/tx 
+      http://www.springframework.org/schema/tx/spring-tx.xsd
+      http://www.springframework.org/schema/data/jpa 
+      http://www.springframework.org/schema/data/jpa/spring-jpa.xsd">
+
+	<!-- The jpa:repositories scans for all interfaces that extend JpaRepository 
+		and creates implementations for use at runtime. -->
+	<jpa:repositories base-package="elaundry.repository" />
+
+
+	<!-- Creates a JPA EntityManagerFactory according to JPA's standard container 
+		bootstrap contract. This is the most powerful way to set up a shared JPA 
+		EntityManagerFactory in a Spring application context; -->
+	<bean id="entityManager"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan" value="elaundry.domain" />
+
+		<!-- provider-specific initialization,etc. -->
+		<property name="jpaVendorAdapter">
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter" />
+		</property>
+		<property name="jpaProperties">
+			<props>
+
+				<!-- hibernate.dialect. This property makes Hibernate generate the appropriate 
+					SQL for the chosen database. -->
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+			</props>
+		</property>
+	</bean>
+
+
+
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:mysql://localhost:3306/laundry_system" />
+		<property name="username" value="cs544" />
+		<property name="password" value="jony1504" />
+	</bean>
+
+
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManager" />
+	</bean>
+
+	<!-- Scan for transaction-based resources -->
+	<context:component-scan base-package="elaundry.service" />
+	<context:component-scan base-package="elaundry.domain" />
+	<context:component-scan base-package="elaundry.repository" />
+	<context:component-scan base-package="elaundry.Aspect" />
+
+
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+
+	<!-- Scan for AOP-based resources -->
+	<aop:aspectj-autoproxy />
+	<!--  <bean id="traceAdvice"  class="elaundry.Aspect.TraceAdvice" /> -->
+
+	<!-- Post-processor to perform exception translation on @Repository classes 
+		(from native exceptions such as JPA PersistenceExceptions to Spring&rsquo;s 
+		DataAccessException hierarchy). -->
+	<bean id="persistenceExceptionTranslationPostProcessor"
+		class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+
+</beans>
